@@ -1,4 +1,4 @@
-local aimingAtNPC = false
+local aimAtNPC = false
     local QBCore = exports['qb-core']:GetCoreObject()
     local canrob = true
 
@@ -13,7 +13,7 @@ local aimingAtNPC = false
                 local hit, entity = GetEntityPlayerIsFreeAimingAt(PlayerId())
                 
                 if hit and canrob == true and IsPedHuman(entity) and not IsPedAPlayer(entity) then
-                    aimingAtNPC = true
+                    aimAtNPC = true
                     local npcPed = entity
                     
                     SetBlockingOfNonTemporaryEvents(npcPed, true)
@@ -37,10 +37,10 @@ local aimingAtNPC = false
                     Citizen.Wait(Config.cooldown)
                     canrob = true
                 else
-                    aimingAtNPC = false
+                    aimAtNPC = false
                 end
             else
-                aimingAtNPC = false
+                aimAtNPC = false
             end
         end
 end)
