@@ -1,6 +1,6 @@
 local aimAtNPC = false
     local QBCore = exports['qb-core']:GetCoreObject()
-    local canrob = true
+    local abletorob = true
 
     Citizen.CreateThread(function()
         while true do
@@ -9,10 +9,10 @@ local aimAtNPC = false
             local playerPed = PlayerPedId()
             local currentWeapon = GetSelectedPedWeapon(playerPed)
             
-            if canrob == true and IsPedAPlayer(playerPed) and IsPedArmed(playerPed, 7) and currentWeapon ~= GetHashKey("WEAPON_UNARMED") then
+            if abletorob == true and IsPedAPlayer(playerPed) and IsPedArmed(playerPed, 7) and currentWeapon ~= GetHashKey("WEAPON_UNARMED") then
                 local hit, entity = GetEntityPlayerIsFreeAimingAt(PlayerId())
                 
-                if hit and canrob == true and IsPedHuman(entity) and not IsPedAPlayer(entity) then
+                if hit and abletorob == true and IsPedHuman(entity) and not IsPedAPlayer(entity) then
                     aimAtNPC = true
                     local npcPed = entity
                     
@@ -33,9 +33,9 @@ local aimAtNPC = false
 
                     TriggerServerEvent("addmoney:addMoney", amount)
                     QBCore.Functions.Notify("You got from them $" .. amount)
-                    canrob = false
+                    abletorob = false
                     Citizen.Wait(Config.cooldown)
-                    canrob = true
+                    abletorob = true
                 else
                     aimAtNPC = false
                 end
