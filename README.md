@@ -19,7 +19,7 @@ local function TestAlert() -- change name to your liking
         coords = coords,
         street = GetStreetAndZone(coords),
         heading = GetPlayerHeading(),
-        jobs = { 'leo' } -- change to your liking
+        jobs = { 'police' } -- change to your liking
     }
 
     TriggerServerEvent('ps-dispatch:server:notify', dispatchData)
