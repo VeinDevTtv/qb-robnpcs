@@ -8,8 +8,6 @@ A script that lets you rob NPCs
 ```lua
 local function TestAlert() -- change name to your liking
     local coords = GetEntityCoords(cache.ped)
-    local vehicle = GetVehicleData(cache.vehicle)
-
     local dispatchData = {
         message = locale('testalert'), -- add this into your locale
         codeName = 'testalert', -- this should be the same as in config.lua
