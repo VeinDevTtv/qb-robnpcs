@@ -5,7 +5,7 @@ A script that lets you rob NPCs
 - Add it that sometimes the NPC can fight with you as well (not bad).
 # Follow these steps to make the script work well:
 - if you got ps-dispatch add this section to alerts.lua
-
+```lua
 local function TestAlert() -- change name to your liking
     local coords = GetEntityCoords(cache.ped)
     local vehicle = GetVehicleData(cache.vehicle)
@@ -25,9 +25,9 @@ local function TestAlert() -- change name to your liking
     TriggerServerEvent('ps-dispatch:server:notify', dispatchData)
 end
 exports('TestAlert', TestAlert) -- change to your liking
-
+```
 - Add this section to config.lua
-
+```lua
     ['testalert'] = { -- Need to match the codeName in alerts.lua
         radius = 0, -- change to your liking
         sprite = 119, -- change to your liking 
@@ -39,5 +39,8 @@ exports('TestAlert', TestAlert) -- change to your liking
         offset = false,
         flash = false
     },
-
-  - After doin the 2 steps up top, go to qb-robnps/client.lua to line 
+```
+  - After doing the 2 steps up top, go to qb-robnps/client.lua and under line 35 and add your export that you made earlier:
+```lua
+exports['ps-dispatch']:TestAlert()
+```
