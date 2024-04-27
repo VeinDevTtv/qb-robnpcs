@@ -1,5 +1,5 @@
 # qb-robnpcs
-A script that lets you rob NPCs
+A script that lets you rob NPCs in FiveM using QBCore framework
 # What is missing?
 - Add dipatch call (easy).
 - Add it that sometimes the NPC can fight with you as well (not bad).
