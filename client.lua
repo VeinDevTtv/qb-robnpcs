@@ -33,6 +33,7 @@ local aimAtNPC = false
 
                     TriggerServerEvent("addmoney:addMoney", amount)
                     QBCore.Functions.Notify("You got from them $" .. amount)
+                    -- Add your dispatch call here
                     abletorob = false
                     Citizen.Wait(Config.cooldown)
                     abletorob = true
