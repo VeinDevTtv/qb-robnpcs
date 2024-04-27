@@ -1,3 +1,11 @@
+function printRed(text)
+    print("^1" .. text)
+end
+printRed("Cybr Rob NPCs")
+
+
+
+
 local QBCore = exports['qb-core']:GetCoreObject()
 
 RegisterServerEvent("addmoney:addMoney")
