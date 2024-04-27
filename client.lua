@@ -37,8 +37,8 @@ Citizen.CreateThread(function()
         
         if abletorob == true and IsPedAPlayer(playerPed) and IsPedArmed(playerPed, 7) and currentWeapon ~= GetHashKey("WEAPON_UNARMED") then
             local hit, entity = GetEntityPlayerIsFreeAimingAt(PlayerId())
-            
-            if hit and abletorob == true and IsPedHuman(entity) and not IsPedAPlayer(entity) and not IsPedInAnyVehicle(entity, true) then
+
+            if hit and abletorob == true and IsEntityAPed(entity) and GetDistanceBetweenCoords(GetEntityCoords(entity), GetEntityCoords(playerPed)) <= 30 and not IsPedAPlayer(entity) and not IsPedInAnyVehicle(entity, true) then
                 aimAtNPC = true
                 local npcPed = entity
                 
