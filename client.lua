@@ -1,68 +1,106 @@
+-- client.lua
 local QBCore = exports['qb-core']:GetCoreObject()
+local isRobbing = false
 
-local aimAtNPC = false
-local abletorob = true
-
-local function DispatchCall()
-    --QS Dispatch
-    local playerData = exports['qs-dispatch']:GetPlayerInfo()
-
+-- helper: trigger QS dispatch
+local function SendDispatch(coords, street1, street2)
     exports['qs-dispatch']:getSSURL(function(image)
         TriggerServerEvent('qs-dispatch:server:CreateDispatchCall', {
-            job = { 'police'},
-            callLocation = playerData.coords,
-            callCode = { code = '10-32', snippet = 'Street Robbery' },
-            message = "Street Robbery activity reported at ".. playerData.street_1.. " near: ".. playerData.street_2.. "",
-            flashes = false,
-            image = image or nil,
-            blip = {
-                sprite = 480,
-                scale = 0.5,
-                colour = 1,
+            job          = Config.dispatch.job,
+            callLocation = coords,
+            callCode     = { code = Config.dispatch.code, snippet = Config.dispatch.text },
+            message      = ("Robbery reported at %s near %s"):format(street1, street2),
+            flashes       = false,
+            image         = image or nil,
+            blip          = {
+                sprite  = Config.dispatch.blipData.sprite,
+                scale   = Config.dispatch.blipData.scale,
+                colour  = Config.dispatch.blipData.colour,
                 flashes = false,
-                text = 'Street Robbery',
-                time = (20 * 1000),
+                text    = Config.dispatch.text,
+                time    = Config.dispatch.blipData.time
             }
         })
     end)
-
 end
 
+-- attempt to rob a specific ped
+local function RobPed(targetPed)
+    if isRobbing then return end
+    isRobbing = true
+
+    local pedCoords = GetEntityCoords(targetPed)
+    local street1, street2 = table.unpack(GetStreetNameAtCoord(pedCoords))
+    street1 = GetStreetNameFromHashKey(street1)
+    street2 = GetStreetNameFromHashKey(street2)
+
+    -- Skill-check (if installed)
+    local success = true
+    if Config.useSkillCheck and exports['ps-ui'] then
+        success = exports['ps-ui']:Skillbar({
+            duration = 3,     -- seconds
+            pos      = math.random(5, 35),
+            width    = math.random(5, 10),
+        })
+    else
+        success = (math.random() < Config.skillCheckSuccessChance)
+    end
+
+    if success then
+        exports['progressBars']:startUI(5000, "Robbing NPC...")  -- requires progressBars resource
+        Wait(5000)
+
+        TriggerServerEvent('cybr-rob:server:GiveMoney', math.random(Config.minAmount, Config.maxAmount))
+        QBCore.Functions.Notify("You robbed them successfully!", "success")
+        SendDispatch(pedCoords, street1, street2)
+    else
+        QBCore.Functions.Notify("They got away and called the cops!", "error")
+        SendDispatch(pedCoords, street1, street2)
+        -- optionally give wanted level
+        TriggerServerEvent('cybr-rob:server:AlertPolice', pedCoords)
+    end
+
+    Wait(Config.cooldown)
+    isRobbing = false
+end
+
+-- main loop: look for Aimed-at NPCs
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
-        
-        local playerPed = PlayerPedId()
-        local currentWeapon = GetSelectedPedWeapon(playerPed)
-        
-        if abletorob == true and IsPedAPlayer(playerPed) and IsPedArmed(playerPed, 7) and currentWeapon ~= GetHashKey("WEAPON_UNARMED") then
-            local hit, entity = GetEntityPlayerIsFreeAimingAt(PlayerId())
+        Wait(5)
+        if isRobbing then goto continue end
 
-            if hit and abletorob == true and IsEntityAPed(entity) and GetDistanceBetweenCoords(GetEntityCoords(entity), GetEntityCoords(playerPed)) <= 30 and not IsPedAPlayer(entity) and not IsPedInAnyVehicle(entity, true) then
-                aimAtNPC = true
-                local npcPed = entity
-                
-                SetBlockingOfNonTemporaryEvents(npcPed, true)
-                SetPedFleeAttributes(npcPed, 0, false)
-                SetPedCombatAttributes(npcPed, 17, true)
-                SetPedCombatAttributes(npcPed, 46, true)
-                
-                TaskHandsUp(npcPed, -1, playerPed, -1, true)
-                Citizen.Wait(5000)
-                TaskPlayAnim(npcPed, "mp_common", "givetake1_a", 8.0, -8.0, -1, 1, 0, false, false, false)
-                ClearPedTasks(npcPed)
+        local playerPed    = PlayerPedId()
+        local weaponHash   = GetSelectedPedWeapon(playerPed)
+        local canRob       = Config.allowedWeapons[weaponHash] or false
 
-                TriggerServerEvent("addmoney:addMoney")         
-                DispatchCall()
-
-                abletorob = false
-                Citizen.Wait(Config.cooldown)
-                abletorob = true
-            else
-                aimAtNPC = false
+        if canRob and IsPlayerFreeAiming(PlayerId()) then
+            local hit, target = GetEntityPlayerIsFreeAimingAt(PlayerId())
+            if hit and DoesEntityExist(target)
+            and IsEntityAPed(target)
+            and not IsPedAPlayer(target)
+            and not IsPedInAnyVehicle(target, true)
+            and #(GetEntityCoords(playerPed) - GetEntityCoords(target)) <= Config.robRange
+            then
+                RobPed(target)
             end
-        else
-            aimAtNPC = false
         end
+
+        ::continue::
     end
 end)
+
+-- optional: Key mapping to manually rob nearest ped
+RegisterCommand("robped", function()
+    local playerPed = PlayerPedId()
+    local coords    = GetEntityCoords(playerPed)
+    local closest, dist = nil, 999.0
+    for ped in EnumeratePeds() do
+        local d = #(coords - GetEntityCoords(ped))
+        if d < dist and not IsPedAPlayer(ped) and d <= Config.robRange then
+            closest, dist = ped, d
+        end
+    end
+    if closest then RobPed(closest) end
+end)
+RegisterKeyMapping("robped", "Rob nearest NPC", "keyboard", "E")
