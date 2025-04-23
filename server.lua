@@ -1,23 +1,24 @@
+-- server.lua
 local QBCore = exports['qb-core']:GetCoreObject()
 
-function printRed(text)
-    print("^1" .. text)
-end
-printRed("Cybr Rob NPCs")
+print("^1[Cybr Rob NPCs] Loaded!^0")
 
-RegisterServerEvent("addmoney:addMoney")
-AddEventHandler("addmoney:addMoney", function()
-    local src = source
+-- handle successful robbery reward
+RegisterServerEvent("cybr-rob:server:GiveMoney")
+AddEventHandler("cybr-rob:server:GiveMoney", function(amount)
+    local src    = source
     local player = QBCore.Functions.GetPlayer(src)
+    if not player then return end
 
-    local amount = math.random(Config.minamount, Config.maxamount)
-    if amount <= 0 then
-        QBCore.Functions.Notify(src, Config.nomoneymsg, 'error')
-        return
-    end
+    player.Functions.AddMoney("cash", amount)
+    TriggerClientEvent('QBCore:Notify', src, ("You received $%d"):format(amount), "success")
+end)
 
-    if player then
-        player.Functions.AddMoney("cash", amount)
-        QBCore.Functions.Notify(src, "You got from them $" .. amount, 'success')
-    end
+-- optional: escalate police alert
+RegisterServerEvent("cybr-rob:server:AlertPolice")
+AddEventHandler("cybr-rob:server:AlertPolice", function(coords)
+    local src = source
+    -- give player a wanted level bump
+    TriggerClientEvent("police:SetPlayerWantedLevel", src, 2)
+    -- you could also log counts or stats here
 end)
